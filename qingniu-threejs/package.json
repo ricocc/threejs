@@ -1,0 +1,14 @@
+{
+  "name": "threejs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "packageManager": "yarn@3.6.1",
+  "scripts": {
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "three": "^0.167.1",
+    "vite": "^5.4.0"
+  }
+}
