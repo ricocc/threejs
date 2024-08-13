@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>08-贴图-2</title>
+  <title>09-阴影效果.html</title>
   <style>
     * {
       margin: 0;
@@ -24,7 +24,7 @@
     // 创建场景
     const scene = new THREE.Scene();
     //添加背景
-    scene.background = new THREE.Color(0xffffff);
+    scene.background = new THREE.Color(0x000000);
 
 
     // 创建相机
@@ -42,8 +42,21 @@
     });
 
     renderer.setSize(window.innerWidth, window.innerHeight);
+    //开启阴影
+    renderer.shadowMap.enabled = true; 
+
     document.body.appendChild(renderer.domElement);
 
+
+
+    // 创建立方体
+    const cube = new THREE.Mesh(
+      new THREE.BoxGeometry(2,2,2),
+      new THREE.MeshStandardMaterial({
+        color: 0xff0000,
+      })
+    );
+    cube.position.set(0, 2, 0);
 
     const textureLoader = new THREE.TextureLoader()
     const floor = textureLoader.load('./images/texture/fabric.jpg')
@@ -56,20 +69,37 @@
       })
     )
     plane.rotation.x = -Math.PI / 2
-    scene.add(plane)
+    scene.add(plane,cube)
 
 
 
     //创建网格辅助
     const gridHelper = new THREE.GridHelper(10, 10, 0xff0000 );
     scene.add( gridHelper);
+
     //添加光照
     //MeshBasicMaterial 基础网格材质不受光照影响
     //标准网格材质(MeshStandardMaterial) 受光照影响
-    const ambientLight = new THREE.AmbientLight( 0x404040 ); // 柔和的白光
-    const directionalLight = new THREE.DirectionalLight( 0xffffff, 2.5 );
-    directionalLight.position.set(3, 3, 3);
-    scene.add( ambientLight, directionalLight );
+    const ambientLight = new THREE.AmbientLight( 0xff0000,1 ); // 柔和的白光
+    const directionalLight = new THREE.DirectionalLight( 0xffffff, 3 );
+    const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 3);
+    directionalLight.position.set(8,8,0);
+    directionalLight.shadow.mapSize.width = 512; // 优化细节，去除阴影锯齿
+    directionalLight.shadow.mapSize.height = 512; // 优化细节，去除阴影锯齿
+    directionalLight.shadow.camera.near = 0.5; // default
+    directionalLight.shadow.camera.far = 500; // default
+
+    // 点光源
+    const PointLight = new THREE.PointLight( 0xffffff, 200 );
+    const PointLightHelper = new THREE.PointLightHelper(PointLight, 4);
+    PointLight.position.set(6,6,0);
+    scene.add( ambientLight, directionalLight ,directionalLightHelper,PointLight,PointLightHelper );
+
+    // 阴影投射：  光源 物体 渲染器
+    cube.castShadow = true;
+    plane.receiveShadow = true;
+    directionalLight.castShadow = true;
+    PointLight.castShadow = true;
 
 
 
@@ -82,6 +112,11 @@
 
 
     function animate() {
+      //点光源绕中心旋转
+      PointLight.position.x = Math.sin(Date.now() / 1000) * 6;
+      PointLight.position.z = Math.cos(Date.now() / 1000) * 6;
+      
+
       requestAnimationFrame(animate);
       controls.update();
        renderer.render(scene, camera);

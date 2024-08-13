@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>08-光照</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    html,body{
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+    // 创建场景
+    const scene = new THREE.Scene();
+    //添加背景
+    scene.background = new THREE.Color(0xffffff);
+
+
+    // 创建相机
+    const camera = new THREE.PerspectiveCamera(
+      75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 20, 0);
+      camera.lookAt(scene.position);
+
+
+    // 创建渲染器
+    const renderer = new THREE.WebGLRenderer({
+      //three.js 优化锯齿
+        antialias: true,
+      // canvas: document.querySelector('.cvs1')
+    });
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+
+    const textureLoader = new THREE.TextureLoader()
+    const floor = textureLoader.load('./images/texture/fabric.jpg')
+    const normalMap = textureLoader.load('./images/texture/fabric_normal.jpg')
+    const plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(10, 10),
+      new THREE.MeshStandardMaterial({
+        map: floor,
+        normalMap: normalMap,
+      })
+    )
+    plane.rotation.x = -Math.PI / 2
+    scene.add(plane)
+
+
+
+    //创建网格辅助
+    const gridHelper = new THREE.GridHelper(10, 10, 0xff0000 );
+    scene.add( gridHelper);
+    //添加光照
+    //MeshBasicMaterial 基础网格材质不受光照影响
+    //标准网格材质(MeshStandardMaterial) 受光照影响
+    const ambientLight = new THREE.AmbientLight( 0xff0000,1 ); // 柔和的白光
+    const directionalLight = new THREE.DirectionalLight( 0xffffff, 2.5 );
+    directionalLight.position.set(3, 3, 3);
+    scene.add( ambientLight, directionalLight );
+
+
+
+    const controls = new OrbitControls( camera, renderer.domElement );
+    controls.enableDamping = true;
+    controls.addEventListener( 'change', function () {
+      console.log(camera.position)
+      renderer.render( scene, camera );
+    });
+
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+       renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
