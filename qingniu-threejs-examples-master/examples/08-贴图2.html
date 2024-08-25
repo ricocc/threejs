@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      .canvas-box {
+        display: flex;
+      }
+      .cvs1,
+      .cvs2 {
+        border: 1px solid #ccc;
+        margin: 0 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+      // 创建场景
+      const scene = new THREE.Scene();
+      // 创建相机
+      const camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera.position.set(0, 20, 0);
+      camera.lookAt(0, 0, 0);
+      // 创建渲染器
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      const ambientLight = new THREE.AmbientLight(0x404040);
+      const directionLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionLight.position.set(3, 3, 3);
+      scene.add(ambientLight, directionLight);
+
+      const textureLoader = new THREE.TextureLoader();
+      const floor = textureLoader.load("../images/floor/base_color.jpg");
+      const aoTexture = textureLoader.load(
+        "../images/floor/ambient_occlusion.jpg"
+      );
+      const heightTexture = textureLoader.load("../images/floor/height.png");
+      const normalTexture = textureLoader.load("../images/floor/normal.jpg");
+      const roughnessTexture = textureLoader.load(
+        "../images/floor/roughness.jpg"
+      );
+
+      const plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(10, 10),
+        new THREE.MeshStandardMaterial({
+          map: floor,
+          aoMap: aoTexture,
+          roughnessMap: roughnessTexture,
+          displacementMap: heightTexture,
+          normalMap: normalTexture,
+        })
+      );
+      plane.rotation.x = -Math.PI / 2;
+      scene.add(plane);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+    </script>
+  </body>
+</html>

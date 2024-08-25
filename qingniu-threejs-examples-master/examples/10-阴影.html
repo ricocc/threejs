@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+
+      // 创建场景
+      const scene = new THREE.Scene();
+
+      // 创建相机
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera.position.set(0, 10, 50);
+      camera.lookAt(0, 0, 0);
+
+      // 创建渲染器
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      document.body.appendChild(renderer.domElement);
+
+      // 光源
+      const ambientLight = new THREE.AmbientLight(0x404040);
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.castShadow = true;
+      directionalLight.shadow.mapSize.width = 2048;
+      directionalLight.shadow.mapSize.height = 2048;
+      directionalLight.position.set(150, 20, 0);
+      const directionalHelper = new THREE.DirectionalLightHelper(
+        directionalLight,
+        5
+      );
+      scene.add(directionalLight, directionalHelper);
+
+      const pointLight = new THREE.PointLight(0xffffff, 200, 100);
+      pointLight.position.set(10, 10, 0);
+      pointLight.castShadow = true;
+      const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
+      scene.add(pointLight, pointLightHelper);
+
+      /*
+        阴影投射： 光源  物体   渲染器 
+      */
+      const plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(100, 100),
+        new THREE.MeshStandardMaterial({ color: 0xffffff })
+      );
+      plane.rotation.x = -Math.PI / 2;
+      plane.receiveShadow = true;
+      scene.add(plane);
+
+      const cube = new THREE.Mesh(
+        new THREE.BoxGeometry(10, 10, 10),
+        new THREE.MeshStandardMaterial({ color: 0xff0000 })
+      );
+      cube.position.set(0, 5, 0);
+      cube.castShadow = true;
+      scene.add(cube);
+
+      // 创建轨道控制器
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      let angle = 0;
+      // 渲染循环
+      function animate() {
+        angle += 0.01;
+        pointLight.position.x = 10 * Math.cos(angle);
+        pointLight.position.z = 10 * Math.sin(angle);
+
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+    </script>
+  </body>
+</html>

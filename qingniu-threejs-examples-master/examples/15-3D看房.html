@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      .tips {
+        position: absolute;
+        left: 0;
+        right: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="tips">进入</p>
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+      const wInfo = {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+      // 创建场景
+      const scene = new THREE.Scene();
+      const axesHelper = new THREE.AxesHelper(100);
+      scene.add(axesHelper);
+      // 创建相机
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        wInfo.width / wInfo.height,
+        0.1,
+        1000
+      );
+      camera.position.set(0, 0, 30);
+      scene.add(camera);
+      // 创建渲染器
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+      });
+      renderer.setSize(wInfo.width, wInfo.height);
+      document.body.appendChild(renderer.domElement);
+      const textureLoader = new THREE.TextureLoader();
+      // const texture = textureLoader.load("../images/3dhouse/scene_left.jpeg");
+      // const images = [
+      //   "../images/3dhouse/scene_left.jpeg",
+      //   "../images/3dhouse/scene_right.jpeg",
+      //   "../images/3dhouse/scene_top.jpeg",
+      //   "../images/3dhouse/scene_bottom.jpeg",
+      //   "../images/3dhouse/scene_front.jpeg",
+      //   "../images/3dhouse/scene_back.jpeg",
+      // ];
+      // let materials = [];
+      // images.forEach((imgUrl) => {
+      //   const texture = textureLoader.load(imgUrl);
+      //   const material = new THREE.MeshBasicMaterial({ map: texture });
+      //   materials.push(material);
+      // });
+      // //创建立方体盒子
+      // const cube = new THREE.Mesh(new THREE.BoxGeometry(40, 40, 40), materials);
+      // cube.geometry.scale(12, 12, -12);
+      // scene.add(cube);
+
+      //创建球体
+      const texture = textureLoader.load("../images/3dhouse/livingRoom.jpg");
+      const sphereGeometry = new THREE.SphereGeometry(16, 32, 32);
+      const sphereMaterial = new THREE.MeshBasicMaterial({
+        map: texture,
+      });
+      const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      sphere.geometry.scale(12, 12, -12);
+      scene.add(sphere);
+      // 点精灵
+      const spriteTexture = textureLoader.load("../images/3dhouse/kitchen.png");
+      const spriteMaterial = new THREE.SpriteMaterial({ map: spriteTexture });
+      const sprite = new THREE.Sprite(spriteMaterial);
+      sprite.scale.set(20, 10, 1);
+      sprite.position.set(-100, -10, -80);
+      scene.add(sprite);
+      // 事件
+      const oTips = document.querySelector(".tips");
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      renderer.domElement.addEventListener("mousemove", (event) => {
+        mouse.x = (event.clientX / wInfo.width) * 2 - 1;
+        mouse.y = -(event.clientY / wInfo.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(sprite);
+        if (intersects.length) {
+          const worldVector = new THREE.Vector3(
+            intersects[0].object.position.x,
+            intersects[0].object.position.y,
+            intersects[0].object.position.z
+          );
+          const dncPostion = worldVector.project(camera);
+          const halfW = wInfo.width / 2;
+          const halfH = wInfo.height / 2;
+          const left = halfW * dncPostion.x + halfW;
+          const top =
+            -halfH * dncPostion.y + halfH - oTips.clientHeight / 2 - 30;
+          oTips.style.left = left + "px";
+          oTips.style.top = top + "px";
+        } else {
+          oTips.style.left = 0;
+          oTips.style.top = 0;
+        }
+      });
+      let roomType = "room";
+      renderer.domElement.addEventListener("mousedown", (event) => {
+        mouse.x = (event.clientX / wInfo.width) * 2 - 1;
+        mouse.y = -(event.clientY / wInfo.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(sprite);
+        if (intersects.length) {
+          if (roomType === "room") {
+            const changeTexture = textureLoader.load(
+              "../images/3dhouse/kitchen.jpg"
+            );
+            const changeMaterial = new THREE.MeshBasicMaterial({
+              map: changeTexture,
+            });
+            const changeSprite = textureLoader.load(
+              "../images/3dhouse/room.png"
+            );
+            const chagneSpriteMaterial = new THREE.SpriteMaterial({
+              map: changeSprite,
+            });
+            sprite.material = chagneSpriteMaterial;
+            sprite.position.set(-100, -10, 80);
+            sphere.material = changeMaterial;
+            roomType = "kitchen";
+          } else if (roomType === "kitchen") {
+            console.log(123213);
+            const changeTexture = textureLoader.load(
+              "../images/3dhouse/livingRoom.jpg"
+            );
+            const changeMaterial = new THREE.MeshBasicMaterial({
+              map: changeTexture,
+            });
+            const changeSprite = textureLoader.load(
+              "../images/3dhouse/kitchen.png"
+            );
+            const chagneSpriteMaterial = new THREE.SpriteMaterial({
+              map: changeSprite,
+            });
+            sprite.material = chagneSpriteMaterial;
+            sprite.position.set(-100, -10, -80);
+            sphere.material = changeMaterial;
+            roomType = "room";
+          }
+        }
+      });
+      // 轨道控制器
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      // 动画关键帧函数
+      function animate() {
+        controls.update();
+        renderer.render(scene, camera);
+
+        window.requestAnimationFrame(animate);
+      }
+      window.requestAnimationFrame(animate);
+    </script>
+  </body>
+</html>
